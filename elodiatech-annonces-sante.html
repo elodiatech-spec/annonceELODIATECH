@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ElodiaTech Annonces Santé — Plateforme de référence des opportunités médicales Antilles-Guyane</title>
+<meta name="description" content="ElodiaTech : la plateforme N°1 pour publier et trouver des annonces santé aux Antilles-Guyane. Installation, reprise patientèle, remplacements, locaux médicaux, emploi santé. Publication gratuite ou offre Premium." />
+<meta property="og:title" content="ElodiaTech Annonces Santé" />
+<meta property="og:description" content="Trouvez le professionnel, le cabinet ou l'opportunité qu'il vous faut. Diffusion ciblée santé aux Antilles-Guyane." />
+<meta property="og:type" content="website" />
+
+<!--
+═══════════════════════════════════════════════════════════════════
+  ELODIATECH ANNONCES SANTÉ — LANDING PAGE
+  Architecture Next.js cible (pour migration future) :
+  ───────────────────────────────────────────────────────────────
+  /app
+    layout.tsx                  → Layout global (Navbar + Footer)
+    page.tsx                    → Page d'accueil (cette landing)
+    /annonces/page.tsx          → Liste des annonces
+    /annonces/[id]/page.tsx     → Détail d'une annonce
+    /deposer/page.tsx           → Formulaire de dépôt
+    /premium/page.tsx           → Tunnel d'achat Premium
+    /dashboard/page.tsx         → Espace utilisateur
+    /auth/login/page.tsx        → Authentification
+
+  /components
+    Navbar.tsx                  → Barre de navigation glassmorphism
+    HeroSection.tsx             → Hero + CTAs principaux
+    StatsBlock.tsx              → 6 atouts plateforme
+    SearchEngine.tsx            → Moteur de recherche
+    CategoryGrid.tsx            → 6 catégories visuelles
+    StandardOffer.tsx           → Offre gratuite
+    PremiumOffer.tsx            → Offre Premium (conversion)
+    Comparator.tsx              → Tableau comparatif
+    PremiumExamples.tsx         → Exemples d'annonces
+    ProcessSteps.tsx            → Parcours en 4 étapes
+    UserSpace.tsx               → Mockup tableau de bord
+    TechStack.tsx               → Stack technologique
+    Footer.tsx                  → Footer + partenaires
+
+  /lib
+    supabase.ts                 → Client Supabase (auth + DB)
+    stripe.ts                   → Paiements Premium
+    crm.ts                      → Intégration HubSpot / Brevo
+
+  Stack : Next.js 14 (App Router) · React · Tailwind CSS · Supabase ·
+          PostgreSQL · Stripe · HubSpot/Brevo · Make / n8n
+═══════════════════════════════════════════════════════════════════
+-->
+
+<!-- Tailwind CSS (CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Google Fonts : Plus Jakarta Sans (titres) + Inter (corps) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+<!-- Lucide Icons (CDN) -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        },
+        colors: {
+          health: {
+            50: '#F0F7FF',
+            100: '#DBEBFF',
+            200: '#B6D7FF',
+            300: '#7FB8FF',
+            400: '#3F94FF',
+            500: '#0099FF',
+            600: '#0066CC',
+            700: '#0052A3',
+            800: '#003D7A',
+            900: '#1A2B4A',
+          },
+          trust: { 500: '#00B894', 600: '#009E7F' },
+          gold: { 300: '#F4D03F', 400: '#E5C100', 500: '#D4AF37', 600: '#B8941F' },
+        },
+        boxShadow: {
+          glass: '0 8px 32px 0 rgba(0, 102, 204, 0.12)',
+          glassLg: '0 20px 60px -10px rgba(0, 102, 204, 0.20)',
+          gold: '0 10px 40px -10px rgba(212, 175, 55, 0.45)',
+          lift: '0 24px 60px -12px rgba(0, 102, 204, 0.25)',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  /* ════════ Variables & base ════════ */
+  :root {
+    --health-50: #F0F7FF;
+    --health-600: #0066CC;
+    --health-500: #0099FF;
+    --gold-500: #D4AF37;
+    --gold-300: #F4D03F;
+    --trust-500: #00B894;
+    --navy: #1A2B4A;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--navy);
+    background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 40%, #F8FBFF 100%);
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.02em; }
+
+  /* ════════ Glassmorphism ════════ */
+  .glass {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 32px 0 rgba(0, 102, 204, 0.10);
+  }
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 20px 60px -10px rgba(0, 102, 204, 0.18);
+  }
+  .glass-gold {
+    background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(244,208,63,0.10) 100%);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    box-shadow: 0 12px 40px -10px rgba(212, 175, 55, 0.30);
+  }
+
+  /* ════════ Blobs animés en fond ════════ */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-1 { background: #0099FF; width: 480px; height: 480px; top: -120px; left: -120px; animation: float1 18s ease-in-out infinite; }
+  .blob-2 { background: #00B894; width: 380px; height: 380px; top: 30%; right: -100px; animation: float2 22s ease-in-out infinite; opacity: 0.35; }
+  .blob-3 { background: #F4D03F; width: 320px; height: 320px; bottom: 10%; left: 20%; animation: float3 26s ease-in-out infinite; opacity: 0.28; }
+  @keyframes float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(80px, 100px) scale(1.1); }
+  }
+  @keyframes float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-90px, 60px) scale(0.95); }
+  }
+  @keyframes float3 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(60px, -80px) scale(1.15); }
+  }
+
+  /* ════════ Dégradés texte ════════ */
+  .text-gradient-blue {
+    background: linear-gradient(135deg, #0066CC 0%, #0099FF 50%, #00B894 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #B8941F 0%, #D4AF37 50%, #F4D03F 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-tech {
+    background: linear-gradient(135deg, #0066CC 0%, #0099FF 40%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ════════ Boutons ════════ */
+  .btn-primary {
+    background: linear-gradient(135deg, #00B894 0%, #00A37D 100%);
+    color: white;
+    box-shadow: 0 10px 30px -8px rgba(0, 184, 148, 0.5);
+    transition: all 0.3s ease;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -8px rgba(0, 184, 148, 0.6); }
+  .btn-secondary {
+    background: linear-gradient(135deg, #0066CC 0%, #0099FF 100%);
+    color: white;
+    box-shadow: 0 10px 30px -8px rgba(0, 102, 204, 0.5);
+    transition: all 0.3s ease;
+  }
+  .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -8px rgba(0, 102, 204, 0.6); }
+  .btn-gold {
+    background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 50%, #D4AF37 100%);
+    background-size: 200% auto;
+    color: #1A2B4A;
+    font-weight: 700;
+    box-shadow: 0 12px 40px -10px rgba(212, 175, 55, 0.55);
+    transition: all 0.4s ease;
+  }
+  .btn-gold:hover { background-position: right center; transform: translateY(-2px); box-shadow: 0 20px 50px -10px rgba(212, 175, 55, 0.7); }
+
+  /* ════════ Cartes hover lift ════════ */
+  .card-lift { transition: transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s ease; }
+  .card-lift:hover { transform: translateY(-8px); box-shadow: 0 24px 60px -12px rgba(0, 102, 204, 0.25); }
+
+  /* ════════ Reveal on scroll ════════ */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(.2,.8,.2,1); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ════════ Badge Premium ════════ */
+  .badge-premium {
+    background: linear-gradient(135deg, #D4AF37, #F4D03F);
+    color: #1A2B4A;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  }
+  .badge-premium::before { content: "★"; margin-right: 4px; }
+
+  /* ════════ Scrollbar discrète ════════ */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #F0F7FF; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#0099FF,#0066CC); border-radius: 10px; }
+
+  /* ════════ Liseré doré Premium ════════ */
+  .premium-border { position: relative; }
+  .premium-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, #D4AF37, #F4D03F, #D4AF37);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ════════ Logo cross animation ════════ */
+  @keyframes pulse-cross { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .logo-cross { animation: pulse-cross 3s ease-in-out infinite; }
+
+  /* Mobile menu */
+  .mobile-menu { transition: transform 0.3s ease, opacity 0.3s ease; }
+  .mobile-menu.hidden-menu { transform: translateY(-10px); opacity: 0; pointer-events: none; }
+</style>
+</head>
+
+<body class="antialiased">
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: Navbar.tsx                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16 md:h-20">
+
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2.5 group">
+        <!-- Croix médicale SVG -->
+        <div class="logo-cross w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #0066CC 0%, #0099FF 60%, #D4AF37 100%); box-shadow: 0 6px 16px -4px rgba(0,102,204,0.4);">
+          <svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
+            <path d="M14 3h-4v7H3v4h7v7h4v-7h7v-4h-7z"/>
+          </svg>
+        </div>
+        <div class="leading-tight">
+          <div class="font-display font-extrabold text-xl md:text-2xl">
+            <span class="text-health-900">Elodia</span><span class="text-gradient-tech">Tech</span>
+          </div>
+          <div class="text-[10px] md:text-[11px] uppercase tracking-widest text-health-600 font-semibold -mt-0.5">Annonces Santé</div>
+        </div>
+      </a>
+
+      <!-- Menu desktop -->
+      <div class="hidden lg:flex items-center gap-8">
+        <a href="#hero" class="text-sm font-medium text-health-900 hover:text-health-600 transition">Accueil</a>
+        <a href="#recherche" class="text-sm font-medium text-health-900 hover:text-health-600 transition">Annonces</a>
+        <a href="#categories" class="text-sm font-medium text-health-900 hover:text-health-600 transition">Catégories</a>
+        <a href="#premium" class="text-sm font-medium text-health-900 hover:text-health-600 transition flex items-center gap-1">
+          Premium <span class="text-gold-500">★</span>
+        </a>
+        <a href="#comparateur" class="text-sm font-medium text-health-900 hover:text-health-600 transition">Tarifs</a>
+        <a href="#" class="text-sm font-medium text-health-900 hover:text-health-600 transition">Connexion</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="#deposer" class="hidden md:inline-flex btn-primary px-5 py-2.5 rounded-full text-sm font-semibold">
+          Déposer une annonce
+        </a>
+        <button id="menu-btn" class="lg:hidden p-2 rounded-lg hover:bg-health-50" aria-label="Menu">
+          <svg class="w-6 h-6 text-health-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu mobile -->
+    <div id="mobile-menu" class="mobile-menu hidden-menu lg:hidden pb-4 space-y-2">
+      <a href="#hero" class="block px-3 py-2 rounded-lg hover:bg-health-50 text-health-900 font-medium">Accueil</a>
+      <a href="#recherche" class="block px-3 py-2 rounded-lg hover:bg-health-50 text-health-900 font-medium">Annonces</a>
+      <a href="#categories" class="block px-3 py-2 rounded-lg hover:bg-health-50 text-health-900 font-medium">Catégories</a>
+      <a href="#premium" class="block px-3 py-2 rounded-lg hover:bg-health-50 text-health-900 font-medium">Premium ★</a>
+      <a href="#comparateur" class="block px-3 py-2 rounded-lg hover:bg-health-50 text-health-900 font-medium">Tarifs</a>
+      <a href="#" class="block px-3 py-2 rounded-lg hover:bg-health-50 text-health-900 font-medium">Connexion</a>
+      <a href="#deposer" class="block btn-primary px-5 py-3 rounded-full text-sm font-semibold text-center mt-3">Déposer une annonce</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: HeroSection.tsx                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section id="hero" class="relative pt-28 md:pt-36 pb-20 md:pb-28 overflow-hidden">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+
+      <!-- Texte -->
+      <div class="reveal">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-6">
+          <span class="w-2 h-2 rounded-full bg-trust-500 animate-pulse"></span>
+          Plateforme N°1 santé Antilles-Guyane
+        </div>
+
+        <h1 class="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-health-900 mb-6">
+          Trouvez le <span class="text-gradient-blue">professionnel</span>,<br />
+          le <span class="text-gradient-blue">cabinet</span> ou l'<span class="text-gradient-gold">opportunité</span><br />
+          qu'il vous faut.
+        </h1>
+
+        <p class="text-lg text-health-700 mb-7 max-w-xl">
+          La plateforme de référence pour les opportunités médicales et paramédicales aux Antilles-Guyane.
+        </p>
+
+        <!-- Liste des 7 besoins -->
+        <div class="grid sm:grid-cols-2 gap-2.5 mb-8">
+          <div class="flex items-start gap-2 text-sm text-health-900"><span class="text-trust-500 font-bold">✓</span> Un local médical à louer ?</div>
+          <div class="flex items-start gap-2 text-sm text-health-900"><span class="text-trust-500 font-bold">✓</span> Un successeur pour votre patientèle ?</div>
+          <div class="flex items-start gap-2 text-sm text-health-900"><span class="text-trust-500 font-bold">✓</span> Un associé pour développer votre activité ?</div>
+          <div class="flex items-start gap-2 text-sm text-health-900"><span class="text-trust-500 font-bold">✓</span> Un remplaçant ?</div>
+          <div class="flex items-start gap-2 text-sm text-health-900"><span class="text-trust-500 font-bold">✓</span> Un poste salarié ?</div>
+          <div class="flex items-start gap-2 text-sm text-health-900"><span class="text-trust-500 font-bold">✓</span> Un cabinet à reprendre ?</div>
+          <div class="flex items-start gap-2 text-sm text-health-900 sm:col-span-2"><span class="text-trust-500 font-bold">✓</span> Une opportunité d'installation ?</div>
+        </div>
+
+        <p class="text-sm text-health-700 mb-7 max-w-xl">
+          <strong>Donnez à votre annonce la visibilité qu'elle mérite.</strong>
+          Publiez gratuitement ou choisissez notre offre Premium pour bénéficier d'une diffusion professionnelle auprès de milliers de professionnels de santé et de nos partenaires du secteur.
+        </p>
+
+        <div class="flex flex-wrap gap-4">
+          <a href="#deposer" class="btn-primary px-7 py-3.5 rounded-full font-semibold text-sm md:text-base inline-flex items-center gap-2">
+            <span class="text-lg">🟢</span> Déposer une annonce
+          </a>
+          <a href="#premium" class="btn-secondary px-7 py-3.5 rounded-full font-semibold text-sm md:text-base inline-flex items-center gap-2">
+            <span class="text-lg">🔵</span> Découvrir l'offre Premium
+          </a>
+        </div>
+      </div>
+
+      <!-- Aperçu carte d'annonce Premium -->
+      <div class="reveal relative">
+        <div class="glass-strong rounded-3xl p-6 shadow-glassLg relative overflow-hidden">
+          <div class="absolute top-4 right-4 badge-premium text-xs px-3 py-1 rounded-full">PREMIUM</div>
+          <div class="aspect-[16/10] rounded-2xl overflow-hidden mb-4 bg-health-100">
+            <img src="https://sspark.genspark.ai/cfimages?u1=TRS0PD9Jtd7OgoptOE2x2vxYlWkyb9MMBUS7QeVQcLoe9hl%2FcDuULB8%2F%2F9Q2ZMITCxxQeeF7MhUtU3Pu%2Fq%2BLoblvlMe1pJZdSzxfP5e4sG540JY1THVqi7usSuISvJf77mVr7%2B81wMYkkohgmfLlE%2FJAtu68LcyBPDzAvZCYAnEIt2sZHXnStw%3D%3D&u2=9MmuYSPbNswNCAQp&width=2560" alt="Cabinet médical moderne à louer" class="w-full h-full object-cover" />
+          </div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-health-100 text-health-700 font-semibold">Installation</span>
+            <span class="text-xs text-health-700">📍 Fort-de-France, Martinique</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-1">Cabinet médical neuf — emplacement premium</h3>
+          <p class="text-sm text-health-700 mb-3">Local de 95 m² au cœur d'une maison de santé pluri-professionnelle. Idéal généraliste, dermatologue, kiné.</p>
+          <div class="flex items-center justify-between text-xs text-health-700">
+            <span>👁️ 1 247 vues · 📅 Il y a 3 jours</span>
+            <a href="#" class="text-health-600 font-semibold hover:underline">Voir l'annonce →</a>
+          </div>
+        </div>
+
+        <!-- Mini-stat flottante -->
+        <div class="absolute -bottom-6 -left-6 glass-gold rounded-2xl px-5 py-4 hidden md:flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-white text-lg font-bold">★</div>
+          <div>
+            <div class="text-xs text-health-700">Annonces Premium</div>
+            <div class="font-display font-bold text-health-900">+10× plus vues</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: StatsBlock.tsx                                            -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="relative py-20 md:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14 reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Nos atouts</div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-4">Pourquoi publier sur <span class="text-gradient-blue">ElodiaTech</span> ?</h2>
+      <p class="text-lg text-health-700 max-w-2xl mx-auto">Une plateforme pensée pour les professionnels de santé, par des experts du secteur.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Stat 1 -->
+      <div class="reveal glass rounded-2xl p-7 card-lift">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-health-500 to-health-600 flex items-center justify-center text-2xl mb-5 shadow-glass">📢</div>
+        <h3 class="font-display font-bold text-lg text-health-900 mb-2">Diffusion ciblée santé</h3>
+        <p class="text-sm text-health-700">Vos annonces atteignent exclusivement une audience de professionnels de santé qualifiés.</p>
+      </div>
+
+      <div class="reveal glass rounded-2xl p-7 card-lift">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-trust-500 to-trust-600 flex items-center justify-center text-2xl mb-5 shadow-glass">🏥</div>
+        <h3 class="font-display font-bold text-lg text-health-900 mb-2">Communauté de professionnels</h3>
+        <p class="text-sm text-health-700">Médecins, infirmiers, kinés, dentistes, pharmaciens : une communauté active aux Antilles-Guyane.</p>
+      </div>
+
+      <div class="reveal glass rounded-2xl p-7 card-lift">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-health-500 to-trust-500 flex items-center justify-center text-2xl mb-5 shadow-glass">🌐</div>
+        <h3 class="font-display font-bold text-lg text-health-900 mb-2">Réseau de partenaires spécialisés</h3>
+        <p class="text-sm text-health-700">Sopharma, Clikodoc, Gan Assurances, Sydel, E-Santé Caraïbe, Orisha…</p>
+      </div>
+
+      <div class="reveal glass rounded-2xl p-7 card-lift">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl mb-5 shadow-glass">📱</div>
+        <h3 class="font-display font-bold text-lg text-health-900 mb-2">Promotion digitale multicanale</h3>
+        <p class="text-sm text-health-700">Facebook, Instagram, LinkedIn, WhatsApp, newsletter : votre annonce partout.</p>
+      </div>
+
+      <div class="reveal glass rounded-2xl p-7 card-lift">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-health-600 to-health-500 flex items-center justify-center text-2xl mb-5 shadow-glass">📩</div>
+        <h3 class="font-display font-bold text-lg text-health-900 mb-2">Gestion simplifiée des candidatures</h3>
+        <p class="text-sm text-health-700">Formulaires intelligents, réception centralisée et qualification automatique.</p>
+      </div>
+
+      <div class="reveal glass rounded-2xl p-7 card-lift">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-trust-500 to-health-500 flex items-center justify-center text-2xl mb-5 shadow-glass">📊</div>
+        <h3 class="font-display font-bold text-lg text-health-900 mb-2">Suivi des performances</h3>
+        <p class="text-sm text-health-700">Vues, clics, contacts, provenance des candidats — tout est mesuré.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: SearchEngine.tsx                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section id="recherche" class="relative py-16 md:py-20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="glass-strong rounded-3xl p-6 md:p-10 reveal">
+      <div class="text-center mb-7">
+        <h2 class="font-display font-extrabold text-2xl md:text-4xl text-health-900 mb-2">Rechercher une annonce</h2>
+        <p class="text-health-700">Trouvez en quelques clics l'opportunité qui vous correspond.</p>
+      </div>
+
+      <!-- Barre de recherche -->
+      <div class="relative mb-5">
+        <input type="text" placeholder="Que recherchez-vous ? Ex : cabinet kiné Martinique"
+               class="w-full pl-14 pr-32 py-4 rounded-2xl border border-health-200 bg-white/70 text-health-900 placeholder:text-health-700/60 focus:outline-none focus:ring-2 focus:ring-health-500 focus:border-transparent text-base" />
+        <svg class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-health-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+        <button class="absolute right-2 top-1/2 -translate-y-1/2 btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold hidden sm:block">Rechercher</button>
+      </div>
+
+      <!-- Filtres -->
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-health-700 mb-1.5 uppercase tracking-wide">Profession</label>
+          <select class="w-full px-4 py-3 rounded-xl border border-health-200 bg-white/70 text-health-900 focus:outline-none focus:ring-2 focus:ring-health-500 text-sm">
+            <option>Tous professionnels</option>
+            <option>Médecins</option>
+            <option>Infirmiers</option>
+            <option>Kinésithérapeutes</option>
+            <option>Orthophonistes</option>
+            <option>Psychologues</option>
+            <option>Sages-femmes</option>
+            <option>Pharmaciens</option>
+            <option>Dentistes</option>
+            <option>Podologues</option>
+            <option>IPA</option>
+            <option>MSP</option>
+            <option>Centres de santé</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-health-700 mb-1.5 uppercase tracking-wide">Type d'opportunité</label>
+          <select class="w-full px-4 py-3 rounded-xl border border-health-200 bg-white/70 text-health-900 focus:outline-none focus:ring-2 focus:ring-health-500 text-sm">
+            <option>Tous types</option>
+            <option>Installation</option>
+            <option>Association</option>
+            <option>Remplacement</option>
+            <option>Collaboration</option>
+            <option>Salariat</option>
+            <option>Reprise cabinet</option>
+            <option>Cession patientèle</option>
+            <option>Location local</option>
+            <option>Vente local professionnel</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-health-700 mb-1.5 uppercase tracking-wide">Localisation</label>
+          <select class="w-full px-4 py-3 rounded-xl border border-health-200 bg-white/70 text-health-900 focus:outline-none focus:ring-2 focus:ring-health-500 text-sm">
+            <option>Toutes localisations</option>
+            <option>Martinique</option>
+            <option>Guadeloupe</option>
+            <option>Guyane</option>
+            <option>Saint-Martin</option>
+            <option>Saint-Barthélemy</option>
+            <option>France entière</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="sm:hidden w-full mt-5 btn-secondary py-3 rounded-xl text-sm font-semibold">Rechercher</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: CategoryGrid.tsx                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section id="categories" class="relative py-20 md:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14 reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Catégories</div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-4">Explorez nos <span class="text-gradient-blue">catégories</span></h2>
+      <p class="text-lg text-health-700 max-w-2xl mx-auto">6 univers d'opportunités pour faire avancer votre carrière ou votre activité.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Installation -->
+      <a href="#" class="reveal glass rounded-3xl overflow-hidden card-lift group">
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=TRS0PD9Jtd7OgoptOE2x2vxYlWkyb9MMBUS7QeVQcLoe9hl%2FcDuULB8%2F%2F9Q2ZMITCxxQeeF7MhUtU3Pu%2Fq%2BLoblvlMe1pJZdSzxfP5e4sG540JY1THVqi7usSuISvJf77mVr7%2B81wMYkkohgmfLlE%2FJAtu68LcyBPDzAvZCYAnEIt2sZHXnStw%3D%3D&u2=9MmuYSPbNswNCAQp&width=2560" alt="Cabinet médical moderne — Installation" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+        </div>
+        <div class="p-6">
+          <div class="text-xs uppercase tracking-widest text-health-600 font-bold mb-2">Catégorie</div>
+          <h3 class="font-display font-bold text-xl text-health-900 mb-2">Installation</h3>
+          <p class="text-sm text-health-700 mb-4">Créer ou développer votre activité dans les Antilles-Guyane.</p>
+          <span class="text-sm font-semibold text-health-600 group-hover:gap-2 inline-flex items-center gap-1 transition-all">Découvrir <span class="transition-transform group-hover:translate-x-1">→</span></span>
+        </div>
+      </a>
+
+      <!-- Reprise patientèle -->
+      <a href="#" class="reveal glass rounded-3xl overflow-hidden card-lift group">
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=0Ds%2Fx0gIoXHNSJE9SXPNmKlOLE52uI750v9HD8Kg0tsAly8t8CgfQMbp3n5o9HBfU8FS0qwrRdjZGl1ZuMNEUcsI48Fs8AQpLt6xNwtEqTR9hMULbFgiszSuNsBenyUAhrg6uXAGvMiJczZv0lGG&u2=Zv8o5b%2B774JwUVo9&width=2560" alt="Reprise de patientèle — confrère" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+        </div>
+        <div class="p-6">
+          <div class="text-xs uppercase tracking-widest text-health-600 font-bold mb-2">Catégorie</div>
+          <h3 class="font-display font-bold text-xl text-health-900 mb-2">Reprise de patientèle</h3>
+          <p class="text-sm text-health-700 mb-4">Céder ou reprendre une activité existante en toute sécurité.</p>
+          <span class="text-sm font-semibold text-health-600 group-hover:gap-2 inline-flex items-center gap-1 transition-all">Découvrir <span class="transition-transform group-hover:translate-x-1">→</span></span>
+        </div>
+      </a>
+
+      <!-- Recherche d'associés -->
+      <a href="#" class="reveal glass rounded-3xl overflow-hidden card-lift group">
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=Wc%2FAC3KXLxqpSgax5o3Zz8LU30wNWjyXphzVsV8YJ6ijCw%2FVamsqEGifRJwXc7zjKDm9vea7WUE93wsZBae84n3G4Xepnm5Ck9nipJTTTdew16mxpU94rJQ%2Bpa%2BYaBADnQ%3D%3D&u2=fCLaCDDLoFr4RTlL&width=2560" alt="Équipe pluriprofessionnelle de santé" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+        </div>
+        <div class="p-6">
+          <div class="text-xs uppercase tracking-widest text-health-600 font-bold mb-2">Catégorie</div>
+          <h3 class="font-display font-bold text-xl text-health-900 mb-2">Recherche d'associés</h3>
+          <p class="text-sm text-health-700 mb-4">Construire un projet collectif avec des confrères engagés.</p>
+          <span class="text-sm font-semibold text-health-600 group-hover:gap-2 inline-flex items-center gap-1 transition-all">Découvrir <span class="transition-transform group-hover:translate-x-1">→</span></span>
+        </div>
+      </a>
+
+      <!-- Remplacements -->
+      <a href="#" class="reveal glass rounded-3xl overflow-hidden card-lift group">
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=94TWbpsYzPKzLVWZ2k6L9kfj3SZGhWzwEoovhKyK5K3%2B3YY%2BIhSW8St8TjkRI7Buu%2F7WDTpCD9Sx87I%2BfKODpPl1tfE3iEm8RCDZWOQxh324n8CQrkgCWSCJU%2BMaoUPZz%2FBZAtdd9LV4LJKEH0AMqVh3RgE%3D&u2=%2FUq5Un5UYBnTHOLX&width=2560" alt="Consultation médicale — remplacement" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+        </div>
+        <div class="p-6">
+          <div class="text-xs uppercase tracking-widest text-health-600 font-bold mb-2">Catégorie</div>
+          <h3 class="font-display font-bold text-xl text-health-900 mb-2">Remplacements</h3>
+          <p class="text-sm text-health-700 mb-4">Trouver rapidement un remplaçant ou une mission.</p>
+          <span class="text-sm font-semibold text-health-600 group-hover:gap-2 inline-flex items-center gap-1 transition-all">Découvrir <span class="transition-transform group-hover:translate-x-1">→</span></span>
+        </div>
+      </a>
+
+      <!-- Emploi -->
+      <a href="#" class="reveal glass rounded-3xl overflow-hidden card-lift group">
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=Zvjh84ElNybFRwiupk9OTahXx86P624A6%2Bopmy3Bap9N%2B2TnuqYktuFDFJ%2BY0d%2BwkUCNeG6TDq17Wy0hlyvMRq2S3NXh5xrCLLhoK6qrN2Zj2dhZ0FkK&u2=iGz5dYI3UkWijF5P&width=2560" alt="Recrutement et emploi santé" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+        </div>
+        <div class="p-6">
+          <div class="text-xs uppercase tracking-widest text-health-600 font-bold mb-2">Catégorie</div>
+          <h3 class="font-display font-bold text-xl text-health-900 mb-2">Emploi Santé</h3>
+          <p class="text-sm text-health-700 mb-4">Postes salariés et opportunités professionnelles.</p>
+          <span class="text-sm font-semibold text-health-600 group-hover:gap-2 inline-flex items-center gap-1 transition-all">Découvrir <span class="transition-transform group-hover:translate-x-1">→</span></span>
+        </div>
+      </a>
+
+      <!-- Locaux -->
+      <a href="#" class="reveal glass rounded-3xl overflow-hidden card-lift group">
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=MY17opOabdwNQC6T7Z0oXWB1RQxtOjERj5QKx6xO9E7YgYYoTw899X%2Bp4mMflarrKFiJ7h5bttPxqMF3LePdhG17El9z%2BmFE7SDmgzHfih7E1NTm1aFF22xwYUIyHh1CCVzi2NN543bud74QLJtN0%2FZTwZ6SM98eXbQjvEh%2FesnSY8e7wrUPK7K9&u2=0IjrJWc5nnPBJHM%2B&width=2560" alt="Maison de santé moderne — locaux médicaux" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+        </div>
+        <div class="p-6">
+          <div class="text-xs uppercase tracking-widest text-health-600 font-bold mb-2">Catégorie</div>
+          <h3 class="font-display font-bold text-xl text-health-900 mb-2">Locaux médicaux</h3>
+          <p class="text-sm text-health-700 mb-4">Louer, vendre ou partager un espace professionnel.</p>
+          <span class="text-sm font-semibold text-health-600 group-hover:gap-2 inline-flex items-center gap-1 transition-all">Découvrir <span class="transition-transform group-hover:translate-x-1">→</span></span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: StandardOffer.tsx                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section id="deposer" class="relative py-20 md:py-24">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12 reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Déposer une annonce</div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-4">Publication <span class="text-gradient-blue">Standard</span></h2>
+      <p class="text-lg text-health-700">Commencez gratuitement, sans engagement.</p>
+    </div>
+
+    <div class="glass-strong rounded-3xl p-8 md:p-12 reveal">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div>
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-trust-500 to-trust-600 text-white text-xs font-bold uppercase tracking-wider mb-3">
+            ✓ Gratuit ou tarif d'entrée
+          </div>
+          <h3 class="font-display font-bold text-2xl md:text-3xl text-health-900">Tout ce qu'il vous faut pour démarrer</h3>
+        </div>
+        <div class="text-right">
+          <div class="font-display font-extrabold text-4xl md:text-5xl text-gradient-blue">0€</div>
+          <div class="text-xs text-health-700">à partir de — sans CB</div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-3 mb-8">
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Publication sur la plateforme</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Référencement dans les résultats de recherche</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Jusqu'à 10 photos</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Description détaillée</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Coordonnées sécurisées</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Formulaire de contact</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Durée configurable</span></div>
+        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-health-50 transition"><span class="w-6 h-6 rounded-full bg-trust-500 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</span><span class="text-sm text-health-900">Gestion autonome</span></div>
+      </div>
+
+      <a href="#" class="btn-secondary inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-semibold w-full sm:w-auto">
+        Publier maintenant
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: PremiumOffer.tsx                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section id="premium" class="relative py-20 md:py-28 overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="blob" style="background:#F4D03F; width:500px; height:500px; top:5%; right:-150px; opacity:0.25; animation: float2 24s ease-in-out infinite;"></div>
+    <div class="blob" style="background:#0066CC; width:420px; height:420px; bottom:0; left:-100px; opacity:0.30; animation: float1 20s ease-in-out infinite;"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <!-- Bandeau Premium -->
+    <div class="text-center mb-14 reveal">
+      <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full badge-premium mb-5 text-sm">
+        OFFRE PREMIUM ELODIATECH
+      </div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl lg:text-6xl text-health-900 mb-5 max-w-4xl mx-auto leading-tight">
+        Multipliez votre visibilité et trouvez plus rapidement votre <span class="text-gradient-gold">candidat</span>, <span class="text-gradient-gold">associé</span> ou <span class="text-gradient-gold">acquéreur</span>.
+      </h2>
+      <p class="text-lg md:text-xl text-health-700 max-w-3xl mx-auto">
+        Votre annonce devient une véritable <strong>campagne de communication professionnelle</strong>.
+      </p>
+    </div>
+
+    <!-- Grille des 7 inclusions Premium -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- A. Mise en avant -->
+      <div class="reveal glass-gold rounded-3xl p-7 card-lift premium-border">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">⭐</div>
+          <h3 class="font-display font-bold text-lg text-health-900">Mise en avant plateforme</h3>
+        </div>
+        <ul class="space-y-2 text-sm text-health-900">
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Position en tête des résultats</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Badge Premium</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Encadrement visuel spécifique</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Mise en avant page d'accueil</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Priorité dans les recherches</li>
+        </ul>
+      </div>
+
+      <!-- B. Visuels -->
+      <div class="reveal glass-gold rounded-3xl p-7 card-lift premium-border">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">🎨</div>
+          <h3 class="font-display font-bold text-lg text-health-900">Visuels professionnels</h3>
+        </div>
+        <ul class="space-y-2 text-sm text-health-900">
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Création d'un visuel premium</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Adaptation Facebook</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Adaptation Instagram</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Adaptation LinkedIn</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Adaptation WhatsApp & Stories</li>
+        </ul>
+      </div>
+
+      <!-- C. Vidéo -->
+      <div class="reveal glass-gold rounded-3xl p-7 card-lift premium-border">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">🎥</div>
+          <h3 class="font-display font-bold text-lg text-health-900">Vidéo promotionnelle</h3>
+        </div>
+        <ul class="space-y-2 text-sm text-health-900">
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Vidéo courte professionnelle</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Version réseaux sociaux</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Version verticale mobile</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Sous-titrage intégré</li>
+        </ul>
+      </div>
+
+      <!-- D. Réseaux sociaux ElodiaTech -->
+      <div class="reveal glass-gold rounded-3xl p-7 card-lift premium-border">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">📱</div>
+          <h3 class="font-display font-bold text-lg text-health-900">Diffusion réseaux sociaux</h3>
+        </div>
+        <ul class="space-y-2 text-sm text-health-900">
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Facebook</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Instagram</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> LinkedIn</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> WhatsApp Business</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Newsletter ElodiaTech</li>
+        </ul>
+      </div>
+
+      <!-- E. Partenaires -->
+      <div class="reveal glass-gold rounded-3xl p-7 card-lift premium-border">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">🤝</div>
+          <h3 class="font-display font-bold text-lg text-health-900">Diffusion partenaires</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">Sopharma</span>
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">Clikodoc</span>
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">Gan Assurances</span>
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">Sydel</span>
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">E-Santé Caraïbe</span>
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">Orisha</span>
+          <span class="px-3 py-1 rounded-full glass text-xs font-semibold text-health-900">+ Institutionnels</span>
+        </div>
+      </div>
+
+      <!-- F. Gestion contacts -->
+      <div class="reveal glass-gold rounded-3xl p-7 card-lift premium-border">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">📨</div>
+          <h3 class="font-display font-bold text-lg text-health-900">Gestion des contacts</h3>
+        </div>
+        <ul class="space-y-2 text-sm text-health-900">
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Formulaire intelligent</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Réception centralisée</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Notification immédiate</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Qualification des demandes</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Historique des échanges</li>
+          <li class="flex gap-2"><span class="text-gold-500">★</span> Tableau de bord candidat</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Reporting (large carte) -->
+    <div class="reveal glass-gold rounded-3xl p-8 md:p-10 mt-6 premium-border">
+      <div class="grid md:grid-cols-2 gap-8 items-center">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-2xl shadow-gold">📊</div>
+            <h3 class="font-display font-bold text-2xl text-health-900">Reporting & Performance</h3>
+          </div>
+          <p class="text-health-700 mb-5">Pilotez votre campagne avec des données précises et un rapport mensuel détaillé.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex items-center gap-2 text-sm text-health-900"><span class="text-gold-500">★</span> Nombre de vues</div>
+            <div class="flex items-center gap-2 text-sm text-health-900"><span class="text-gold-500">★</span> Nombre de clics</div>
+            <div class="flex items-center gap-2 text-sm text-health-900"><span class="text-gold-500">★</span> Nombre de contacts</div>
+            <div class="flex items-center gap-2 text-sm text-health-900"><span class="text-gold-500">★</span> Provenance des candidats</div>
+            <div class="flex items-center gap-2 text-sm text-health-900"><span class="text-gold-500">★</span> Performance campagne</div>
+            <div class="flex items-center gap-2 text-sm text-health-900"><span class="text-gold-500">★</span> Rapport mensuel</div>
+          </div>
+        </div>
+        <!-- Mini graphique fake -->
+        <div class="glass-strong rounded-2xl p-6">
+          <div class="flex justify-between items-end mb-3">
+            <div>
+              <div class="text-xs text-health-700">Performance mensuelle</div>
+              <div class="font-display font-bold text-2xl text-health-900">+247%</div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-trust-500/15 text-trust-600 text-xs font-bold">▲ Mois en cours</span>
+          </div>
+          <div class="flex items-end gap-2 h-32">
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-health-600 to-health-400" style="height:30%"></div>
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-health-600 to-health-400" style="height:45%"></div>
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-health-600 to-health-400" style="height:38%"></div>
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-health-600 to-health-400" style="height:62%"></div>
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-health-600 to-health-400" style="height:75%"></div>
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-gold-400 to-gold-500" style="height:92%"></div>
+            <div class="flex-1 rounded-t-lg bg-gradient-to-t from-gold-400 to-gold-500" style="height:100%"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-health-700 mt-2">
+            <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA final Premium -->
+    <div class="text-center mt-12 reveal">
+      <a href="#" class="btn-gold inline-flex items-center gap-3 px-10 py-5 rounded-full text-lg font-bold">
+        <span class="text-xl">★</span>
+        Passer à la version Premium
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <p class="text-xs text-health-700 mt-3">Sans engagement · Accompagnement dédié · Diffusion sous 48h</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: Comparator.tsx                                            -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section id="comparateur" class="relative py-20 md:py-24">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12 reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Comparatif</div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-4">Standard ou <span class="text-gradient-gold">Premium</span> ?</h2>
+      <p class="text-lg text-health-700">Choisissez l'offre la plus adaptée à votre objectif.</p>
+    </div>
+
+    <div class="glass-strong rounded-3xl overflow-hidden reveal">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-health-100">
+              <th class="text-left p-5 md:p-6 font-display font-bold text-health-900">Fonctionnalité</th>
+              <th class="p-5 md:p-6 text-center">
+                <div class="font-display font-bold text-health-600 text-lg">Standard</div>
+                <div class="text-xs text-health-700 font-normal">Gratuit</div>
+              </th>
+              <th class="p-5 md:p-6 text-center bg-gradient-to-br from-gold-400/20 to-gold-500/10 border-l border-gold-500/30">
+                <div class="font-display font-bold text-gradient-gold text-lg">★ Premium</div>
+                <div class="text-xs text-health-700 font-normal">Sur devis</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-health-100">
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Publication annonce</td><td class="text-center"><span class="text-health-600 text-xl font-bold">✓</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Photos</td><td class="text-center"><span class="text-health-600 text-xl font-bold">✓</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Formulaire de contact</td><td class="text-center"><span class="text-health-600 text-xl font-bold">✓</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Mise en avant</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Badge Premium</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Réseaux sociaux ElodiaTech</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Création visuels professionnels</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Création vidéo</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Diffusion partenaires</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Reporting détaillé</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+            <tr><td class="p-4 md:p-5 text-sm font-medium text-health-900">Accompagnement dédié</td><td class="text-center"><span class="text-health-200 text-xl">—</span></td><td class="text-center bg-gold-300/5"><span class="text-gold-500 text-xl font-bold">✓</span></td></tr>
+          </tbody>
+          <tfoot>
+            <tr class="border-t border-health-100">
+              <td class="p-5"></td>
+              <td class="p-5 text-center">
+                <a href="#deposer" class="btn-secondary inline-flex px-5 py-2.5 rounded-xl text-sm font-semibold">Publier gratuitement</a>
+              </td>
+              <td class="p-5 text-center bg-gold-300/5">
+                <a href="#premium" class="btn-gold inline-flex px-5 py-2.5 rounded-xl text-sm font-bold">Choisir Premium</a>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: PremiumExamples.tsx                                       -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="relative py-20 md:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12 reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Exemples</div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-4">Quelques annonces <span class="text-gradient-gold">Premium</span></h2>
+      <p class="text-lg text-health-700">Aperçu de la visibilité offerte par le pack Premium.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Exemple 1 -->
+      <div class="reveal glass-strong rounded-3xl overflow-hidden card-lift relative">
+        <div class="absolute top-4 right-4 z-10 badge-premium text-xs px-3 py-1 rounded-full">PREMIUM</div>
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=94TWbpsYzPKzLVWZ2k6L9kfj3SZGhWzwEoovhKyK5K3%2B3YY%2BIhSW8St8TjkRI7Buu%2F7WDTpCD9Sx87I%2BfKODpPl1tfE3iEm8RCDZWOQxh324n8CQrkgCWSCJU%2BMaoUPZz%2FBZAtdd9LV4LJKEH0AMqVh3RgE%3D&u2=%2FUq5Un5UYBnTHOLX&width=2560" alt="Cabinet kinésithérapie" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-6">
+          <div class="flex items-center gap-2 mb-3 flex-wrap">
+            <span class="text-xs px-2.5 py-1 rounded-full bg-health-100 text-health-700 font-bold">Cession patientèle</span>
+            <span class="text-xs text-health-700">📍 Martinique</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-1">Cabinet de kinésithérapie à céder</h3>
+          <p class="text-sm text-health-700 mb-4">Patientèle fidèle, équipement complet, emplacement central Fort-de-France.</p>
+          <div class="flex items-center justify-between text-xs text-health-700 pt-3 border-t border-health-100">
+            <span>👁️ 1 247 vues · 3 jours</span>
+            <a href="#" class="text-health-600 font-semibold hover:underline">Voir →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exemple 2 -->
+      <div class="reveal glass-strong rounded-3xl overflow-hidden card-lift relative">
+        <div class="absolute top-4 right-4 z-10 badge-premium text-xs px-3 py-1 rounded-full">PREMIUM</div>
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=Wc%2FAC3KXLxqpSgax5o3Zz8LU30wNWjyXphzVsV8YJ6ijCw%2FVamsqEGifRJwXc7zjKDm9vea7WUE93wsZBae84n3G4Xepnm5Ck9nipJTTTdew16mxpU94rJQ%2Bpa%2BYaBADnQ%3D%3D&u2=fCLaCDDLoFr4RTlL&width=2560" alt="Recherche associé médecin" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-6">
+          <div class="flex items-center gap-2 mb-3 flex-wrap">
+            <span class="text-xs px-2.5 py-1 rounded-full bg-health-100 text-health-700 font-bold">Association</span>
+            <span class="text-xs text-health-700">📍 Guadeloupe</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-1">Recherche associé(e) médecin généraliste</h3>
+          <p class="text-sm text-health-700 mb-4">Projet de MSP, secteur 1, locaux neufs, équipe pluridisciplinaire en place.</p>
+          <div class="flex items-center justify-between text-xs text-health-700 pt-3 border-t border-health-100">
+            <span>👁️ 892 vues · 5 jours</span>
+            <a href="#" class="text-health-600 font-semibold hover:underline">Voir →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exemple 3 -->
+      <div class="reveal glass-strong rounded-3xl overflow-hidden card-lift relative">
+        <div class="absolute top-4 right-4 z-10 badge-premium text-xs px-3 py-1 rounded-full">PREMIUM</div>
+        <div class="aspect-[16/10] overflow-hidden">
+          <img src="https://sspark.genspark.ai/cfimages?u1=MY17opOabdwNQC6T7Z0oXWB1RQxtOjERj5QKx6xO9E7YgYYoTw899X%2Bp4mMflarrKFiJ7h5bttPxqMF3LePdhG17El9z%2BmFE7SDmgzHfih7E1NTm1aFF22xwYUIyHh1CCVzi2NN543bud74QLJtN0%2FZTwZ6SM98eXbQjvEh%2FesnSY8e7wrUPK7K9&u2=0IjrJWc5nnPBJHM%2B&width=2560" alt="Local médical neuf MSP" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-6">
+          <div class="flex items-center gap-2 mb-3 flex-wrap">
+            <span class="text-xs px-2.5 py-1 rounded-full bg-health-100 text-health-700 font-bold">Location local</span>
+            <span class="text-xs text-health-700">📍 Guyane</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-1">Local médical neuf à louer en MSP</h3>
+          <p class="text-sm text-health-700 mb-4">Espace 60 m² aménagé, parking, accessibilité PMR, démarrage immédiat.</p>
+          <div class="flex items-center justify-between text-xs text-health-700 pt-3 border-t border-health-100">
+            <span>👁️ 1 654 vues · 1 semaine</span>
+            <a href="#" class="text-health-600 font-semibold hover:underline">Voir →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: ProcessSteps.tsx                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="relative py-20 md:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14 reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Processus</div>
+      <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-4">Simple comme <span class="text-gradient-blue">1, 2, 3, 4</span></h2>
+      <p class="text-lg text-health-700">Quatre étapes pour donner vie à votre annonce.</p>
+    </div>
+
+    <div class="relative">
+      <!-- Ligne décorative -->
+      <div class="hidden lg:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-health-300 via-trust-500 to-gold-500 opacity-40"></div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <!-- Étape 1 -->
+        <div class="reveal text-center">
+          <div class="w-24 h-24 mx-auto mb-5 rounded-full glass-strong flex items-center justify-center relative">
+            <div class="absolute inset-2 rounded-full bg-gradient-to-br from-health-500 to-health-600 flex items-center justify-center text-white font-display font-extrabold text-3xl">1</div>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-2">Déposez votre annonce</h3>
+          <p class="text-sm text-health-700">Quelques minutes suffisent pour rédiger et publier.</p>
+        </div>
+
+        <!-- Étape 2 -->
+        <div class="reveal text-center">
+          <div class="w-24 h-24 mx-auto mb-5 rounded-full glass-strong flex items-center justify-center relative">
+            <div class="absolute inset-2 rounded-full bg-gradient-to-br from-health-500 to-trust-500 flex items-center justify-center text-white font-display font-extrabold text-3xl">2</div>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-2">Standard ou Premium</h3>
+          <p class="text-sm text-health-700">Choisissez le niveau de visibilité adapté à vos objectifs.</p>
+        </div>
+
+        <!-- Étape 3 -->
+        <div class="reveal text-center">
+          <div class="w-24 h-24 mx-auto mb-5 rounded-full glass-strong flex items-center justify-center relative">
+            <div class="absolute inset-2 rounded-full bg-gradient-to-br from-trust-500 to-gold-500 flex items-center justify-center text-white font-display font-extrabold text-3xl">3</div>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-2">Nous diffusons</h3>
+          <p class="text-sm text-health-700">Plateforme, réseaux sociaux, newsletter, partenaires.</p>
+        </div>
+
+        <!-- Étape 4 -->
+        <div class="reveal text-center">
+          <div class="w-24 h-24 mx-auto mb-5 rounded-full glass-strong flex items-center justify-center relative">
+            <div class="absolute inset-2 rounded-full bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-white font-display font-extrabold text-3xl">4</div>
+          </div>
+          <h3 class="font-display font-bold text-lg text-health-900 mb-2">Recevez vos contacts</h3>
+          <p class="text-sm text-health-700">Candidatures qualifiées, centralisées et notifiées.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: UserSpace.tsx                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="relative py-20 md:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+
+      <!-- Dashboard mockup CSS -->
+      <div class="reveal order-2 lg:order-1">
+        <div class="glass-strong rounded-3xl p-5 shadow-glassLg">
+          <!-- Mock browser header -->
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-health-100">
+            <div class="flex gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-red-400"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+              <span class="w-3 h-3 rounded-full bg-green-400"></span>
+            </div>
+            <div class="flex-1 mx-3 px-3 py-1 rounded-md bg-health-50 text-[10px] text-health-700">elodiatech.com/dashboard</div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-3 min-h-[380px]">
+            <!-- Sidebar -->
+            <aside class="col-span-3 glass rounded-2xl p-3 space-y-1">
+              <div class="px-2 py-1.5 rounded-lg bg-gradient-to-r from-health-500 to-health-600 text-white text-[10px] font-bold">📊 Tableau de bord</div>
+              <div class="px-2 py-1.5 rounded-lg text-health-700 text-[10px]">📝 Mes annonces</div>
+              <div class="px-2 py-1.5 rounded-lg text-health-700 text-[10px]">💬 Messagerie</div>
+              <div class="px-2 py-1.5 rounded-lg text-health-700 text-[10px]">👥 Contacts</div>
+              <div class="px-2 py-1.5 rounded-lg text-health-700 text-[10px]">🧾 Factures</div>
+              <div class="px-2 py-1.5 rounded-lg text-health-700 text-[10px]">⚙️ Paramètres</div>
+            </aside>
+
+            <!-- Content -->
+            <div class="col-span-9 space-y-3">
+              <!-- KPIs -->
+              <div class="grid grid-cols-3 gap-2">
+                <div class="glass rounded-xl p-3">
+                  <div class="text-[10px] text-health-700">Vues</div>
+                  <div class="font-display font-bold text-xl text-health-900">247</div>
+                  <div class="text-[9px] text-trust-500 font-bold">▲ +18%</div>
+                </div>
+                <div class="glass rounded-xl p-3">
+                  <div class="text-[10px] text-health-700">Contacts</div>
+                  <div class="font-display font-bold text-xl text-health-900">38</div>
+                  <div class="text-[9px] text-trust-500 font-bold">▲ +9%</div>
+                </div>
+                <div class="glass rounded-xl p-3">
+                  <div class="text-[10px] text-health-700">Annonces actives</div>
+                  <div class="font-display font-bold text-xl text-health-900">12</div>
+                  <div class="text-[9px] text-health-600 font-bold">★ 3 Premium</div>
+                </div>
+              </div>
+
+              <!-- Chart -->
+              <div class="glass rounded-xl p-3">
+                <div class="flex justify-between items-center mb-2">
+                  <div class="text-[10px] font-semibold text-health-900">Visites — 7 derniers jours</div>
+                  <div class="text-[9px] text-health-700">+23%</div>
+                </div>
+                <div class="flex items-end gap-1 h-16">
+                  <div class="flex-1 rounded-t bg-health-300" style="height:30%"></div>
+                  <div class="flex-1 rounded-t bg-health-400" style="height:50%"></div>
+                  <div class="flex-1 rounded-t bg-health-500" style="height:40%"></div>
+                  <div class="flex-1 rounded-t bg-health-500" style="height:65%"></div>
+                  <div class="flex-1 rounded-t bg-health-600" style="height:80%"></div>
+                  <div class="flex-1 rounded-t bg-gold-400" style="height:95%"></div>
+                  <div class="flex-1 rounded-t bg-gold-500" style="height:100%"></div>
+                </div>
+              </div>
+
+              <!-- Annonces list -->
+              <div class="glass rounded-xl p-3 space-y-2">
+                <div class="flex items-center justify-between text-[10px]">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-trust-500"></span>
+                    <span class="font-semibold text-health-900">Cabinet kiné à céder</span>
+                  </div>
+                  <span class="badge-premium px-1.5 py-0.5 rounded-full text-[8px]">PREMIUM</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-trust-500"></span>
+                    <span class="font-semibold text-health-900">Recherche IDE remplaçant</span>
+                  </div>
+                  <span class="text-health-700 text-[9px]">Standard</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px]">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-trust-500"></span>
+                    <span class="font-semibold text-health-900">Local 95 m² Fort-de-France</span>
+                  </div>
+                  <span class="badge-premium px-1.5 py-0.5 rounded-full text-[8px]">PREMIUM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Texte -->
+      <div class="reveal order-1 lg:order-2">
+        <div class="inline-block px-4 py-1.5 rounded-full glass text-xs font-semibold text-health-700 mb-4">Espace utilisateur</div>
+        <h2 class="font-display font-extrabold text-3xl md:text-5xl text-health-900 mb-5">Pilotez tout depuis votre <span class="text-gradient-blue">tableau de bord</span></h2>
+        <p class="text-lg text-health-700 mb-7">Chaque annonceur dispose d'un espace personnel complet pour gérer ses annonces, contacts et performances.</p>
+
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Tableau de bord personnel</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Gestion des annonces</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Gestion des contacts</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Statistiques détaillées</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Messagerie intégrée</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Historique complet</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Renouvellement rapide</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Factures téléchargeables</div>
+          <div class="flex items-center gap-2.5 text-sm text-health-900 sm:col-span-2"><span class="w-6 h-6 rounded-full bg-trust-500/15 text-trust-600 flex items-center justify-center text-xs font-bold">✓</span> Paiement sécurisé (Stripe)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: TechStack.tsx                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="relative py-16 md:py-20">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="glass rounded-3xl p-8 md:p-10 text-center reveal">
+      <div class="inline-block px-4 py-1.5 rounded-full glass-strong text-xs font-semibold text-health-700 mb-4">Stack technique</div>
+      <h2 class="font-display font-extrabold text-2xl md:text-3xl text-health-900 mb-4">Une plateforme bâtie sur des technologies <span class="text-gradient-blue">modernes</span></h2>
+      <p class="text-health-700 mb-7 max-w-2xl mx-auto">Performances, sécurité et évolutivité — Architecture pensée pour la santé numérique.</p>
+      <div class="flex flex-wrap justify-center gap-2.5">
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Next.js</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">React</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Tailwind CSS</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Supabase</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">PostgreSQL</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Stripe</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">HubSpot</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Brevo</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Make</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">n8n</span>
+        <span class="px-4 py-2 rounded-full glass-strong text-sm font-semibold text-health-900">Schema.org</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- Component: Footer.tsx                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<footer class="relative pt-16 pb-8 mt-10" style="background: linear-gradient(180deg, transparent 0%, #0a1530 30%, #1A2B4A 100%);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12 text-white">
+      <!-- Colonne logo -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #0099FF 0%, #D4AF37 100%);">
+            <svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor"><path d="M14 3h-4v7H3v4h7v7h4v-7h7v-4h-7z"/></svg>
+          </div>
+          <div>
+            <div class="font-display font-extrabold text-xl">
+              <span class="text-white">Elodia</span><span class="text-gradient-tech">Tech</span>
+            </div>
+            <div class="text-[10px] uppercase tracking-widest text-health-300 font-semibold">Annonces Santé</div>
+          </div>
+        </div>
+        <p class="text-sm text-health-100/80 max-w-xs mb-5">La plateforme de référence pour les opportunités médicales et paramédicales aux Antilles-Guyane.</p>
+        <div class="flex gap-3">
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" aria-label="Facebook">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5.02 3.66 9.18 8.44 9.93v-7.03H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.57v1.88h2.78l-.44 2.9h-2.34V22c4.78-.75 8.44-4.91 8.44-9.93z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" aria-label="Instagram">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.38C1.35 2.68.94 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.13.66.66 1.34 1.07 2.13 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.13-1.38.66-.66 1.07-1.34 1.38-2.13.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.13C21.32 1.35 20.65.94 19.86.63 19.1.33 18.22.13 16.95.07 15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 100 12.32 6.16 6.16 0 000-12.32zM12 16a4 4 0 110-8 4 4 0 010 8zm6.41-11.85a1.44 1.44 0 100 2.88 1.44 1.44 0 000-2.88z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" aria-label="LinkedIn">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.95v5.66H9.36V9h3.42v1.56h.04c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 11-.01-4.12 2.06 2.06 0 01.01 4.12zM3.56 20.45h3.56V9H3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.72v20.56C0 23.23.8 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition" aria-label="WhatsApp">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.3-.3.3-1.1 1.1-1.1 2.6 0 1.5 1.1 3 1.3 3.2.2.2 2.2 3.3 5.3 4.6.7.3 1.3.5 1.8.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3zM12 0C5.4 0 0 5.4 0 12c0 2.1.6 4.2 1.6 6L0 24l6.2-1.6c1.7.9 3.7 1.4 5.8 1.4 6.6 0 12-5.4 12-12S18.6 0 12 0zm0 22c-1.9 0-3.7-.5-5.3-1.4l-.4-.2-3.7.9.9-3.6-.2-.4C2.5 15.7 2 13.9 2 12c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Plateforme -->
+      <div>
+        <div class="font-display font-bold text-sm uppercase tracking-wider text-gold-300 mb-4">Plateforme</div>
+        <ul class="space-y-2 text-sm text-health-100/80">
+          <li><a href="#" class="hover:text-white transition">Déposer une annonce</a></li>
+          <li><a href="#" class="hover:text-white transition">Rechercher</a></li>
+          <li><a href="#" class="hover:text-white transition">Offre Premium</a></li>
+          <li><a href="#" class="hover:text-white transition">Tableau de bord</a></li>
+        </ul>
+      </div>
+
+      <!-- Catégories -->
+      <div>
+        <div class="font-display font-bold text-sm uppercase tracking-wider text-gold-300 mb-4">Catégories</div>
+        <ul class="space-y-2 text-sm text-health-100/80">
+          <li><a href="#" class="hover:text-white transition">Installation</a></li>
+          <li><a href="#" class="hover:text-white transition">Reprise patientèle</a></li>
+          <li><a href="#" class="hover:text-white transition">Remplacements</a></li>
+          <li><a href="#" class="hover:text-white transition">Emploi santé</a></li>
+          <li><a href="#" class="hover:text-white transition">Locaux médicaux</a></li>
+        </ul>
+      </div>
+
+      <!-- Légal / Contact -->
+      <div>
+        <div class="font-display font-bold text-sm uppercase tracking-wider text-gold-300 mb-4">Aide & Légal</div>
+        <ul class="space-y-2 text-sm text-health-100/80">
+          <li><a href="#" class="hover:text-white transition">Centre d'aide</a></li>
+          <li><a href="#" class="hover:text-white transition">Nous contacter</a></li>
+          <li><a href="#" class="hover:text-white transition">CGU</a></li>
+          <li><a href="#" class="hover:text-white transition">Confidentialité</a></li>
+          <li><a href="#" class="hover:text-white transition">Mentions légales</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bandeau partenaires -->
+    <div class="border-t border-white/10 pt-6 mb-6">
+      <div class="text-xs text-health-100/60 mb-3 text-center uppercase tracking-widest font-semibold">Nos partenaires</div>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <span class="px-3 py-1.5 rounded-full bg-white/5 text-white/70 text-xs font-medium">Sopharma</span>
+        <span class="px-3 py-1.5 rounded-full bg-white/5 text-white/70 text-xs font-medium">Clikodoc</span>
+        <span class="px-3 py-1.5 rounded-full bg-white/5 text-white/70 text-xs font-medium">Gan Assurances</span>
+        <span class="px-3 py-1.5 rounded-full bg-white/5 text-white/70 text-xs font-medium">Sydel</span>
+        <span class="px-3 py-1.5 rounded-full bg-white/5 text-white/70 text-xs font-medium">E-Santé Caraïbe</span>
+        <span class="px-3 py-1.5 rounded-full bg-white/5 text-white/70 text-xs font-medium">Orisha</span>
+      </div>
+    </div>
+
+    <div class="text-center text-xs text-health-100/60 pt-4 border-t border-white/10">
+      © 2026 <span class="text-white font-semibold">ElodiaTech</span> — Plateforme d'annonces santé des Antilles-Guyane · Tous droits réservés
+    </div>
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- JavaScript : interactions UI                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<script>
+  // Menu mobile
+  const menuBtn = document.getElementById('menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  menuBtn?.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden-menu');
+  });
+  // Close on link click (mobile)
+  mobileMenu?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.add('hidden-menu')));
+
+  // Reveal on scroll (IntersectionObserver)
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+  reveals.forEach(el => io.observe(el));
+
+  // Lucide icons (si utilisés)
+  if (window.lucide) { lucide.createIcons(); }
+</script>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
